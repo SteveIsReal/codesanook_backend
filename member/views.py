@@ -1,3 +1,7 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from member.models import *
+from member.serializers import *
 
-# Create your views here.
+class TeacherViewset(viewsets.ModelViewSet):
+    queryset = Teacher.objects.all()
+    serializer_class = TeacherSerializer
