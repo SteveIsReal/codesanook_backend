@@ -8,4 +8,8 @@ class TeacherAdmin(admin.ModelAdmin):
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
+    readonly_fields = ['current_credit']
+
+@admin.register(School)
+class SchoolAdmin(admin.ModelAdmin):
     pass

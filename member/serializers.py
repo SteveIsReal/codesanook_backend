@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from member.models import *
+from classroom.serializer import CourseSerializer
 from django.contrib.auth.models import User
 
 
@@ -42,3 +43,77 @@ class TeacherSerializer(serializers.ModelSerializer):
         model = Teacher
         fields = "__all__"
 
+class StudentSerializer(serializers.ModelSerializer):
+
+    course = serializers.SerializerMethodField()
+
+    def get_course(self, obj):
+        #return CourseSerializer(obj.course_set.all(), many=True).data
+        return [c.name for c in obj.course_set.all()]
+
+    class Meta:
+        model = Student
+        fields = "__all__"
+        read_only_fields = ['current_credit']
+
+class CreditTransactionSerializer(serializers.ModelSerializer):
+
+    date = serializers.SerializerMethodField()
+    time = serializers.SerializerMethodField()
+
+    def get_date(self, obj):
+        return obj.date_time.strftime('%d/%m/%Y')
+
+    def get_time(self, obj):
+        return obj.date_time.strftime('%H:%M')
+
+    class Meta:
+        model = CreditTransaction
+        fields = "__all__"
+        read_only_fields = ['date_time']
+
+class AddCreditTrasactionSerializer(serializers.ModelSerializer):
+
+    def validate(self, attrs):
+        if attrs['credit'] <= 0:
+            raise serializers.ValidationError({
+                'credit' : "credit must be more than 0"
+            })
+        return attrs
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        print(request.user)
+
+        validated_data['note'] = f"{request.user} added {validated_data["credit"]} credit"
+
+        return super().create(validated_data)
+
+    class Meta:
+        model = CreditTransaction
+        fields = "__all__"
+        read_only_fields = ['date_time']
+
+class UseCreditTransactionSerializer(serializers.ModelSerializer):
+
+    def validate(self, attrs):
+        if attrs['credit'] >= 0:
+            raise serializers.ValidationError({
+                'credit' : "credit must be less than 0"
+            })
+        return attrs
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        validated_data['note'] = f"{request.user} removed {validated_data['credit'] * -1} credits"
+        return super().create(validated_data)
+
+    class Meta:
+        model = CreditTransaction
+        fields = "__all__"
+        read_only_fields = ['date_time']
+
+class SchoolSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = School
+        fields = "__all__"

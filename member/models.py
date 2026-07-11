@@ -12,10 +12,16 @@ class Teacher(models.Model):
 
 #class Parent(models.Model):
 
+class School(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return str(self.name)
+
 class Student(models.Model):
     name = models.CharField(max_length=100)
-    school = models.CharField(max_length=100)
-    current_credit = models.IntegerField()
+    school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True)
+    current_credit = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.name}"
@@ -26,5 +32,18 @@ class CreditTransaction(models.Model):
     credit = models.IntegerField()
     note = models.TextField(null=True, blank=True)
 
+    def recalculate_credit(self):
+        current_credit = sum([i.credit for i in CreditTransaction.objects.filter(student=self.student)])
+        student = self.student
+        student.current_credit = current_credit
+        student.save()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.recalculate_credit()
+
     def __str__(self):
         return f"{self.student} | {self.note}"
+
+    class Meta:
+        ordering = ['-date_time']
