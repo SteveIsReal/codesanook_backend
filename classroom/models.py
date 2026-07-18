@@ -30,11 +30,15 @@ class Course(models.Model):
     end_time = models.TimeField()
     max_session = models.IntegerField(default=10)
 
+    @property
+    def used_session_count(self):
+        return self.sessions.count()
+
     def __str__(self):
         return f"{self.name} with {self.teacher} on {self.weekday}"
 
 class Session(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name="sessions", on_delete=models.CASCADE)
     date_time = models.DateTimeField(auto_now_add=True)
     comment = models.TextField()
 
@@ -50,8 +54,8 @@ class Session(models.Model):
         return f"{self.course} @ {self.date_time}"
 
 class Attendance(models.Model):
-    session = models.ForeignKey(Session, on_delete=models.CASCADE)
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    session = models.ForeignKey(Session, related_name='attendances', on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, related_name='attendances', on_delete=models.CASCADE)
     comment = models.TextField()
     
     def __str__(self):

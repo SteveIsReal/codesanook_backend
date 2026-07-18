@@ -5,6 +5,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     teacher = serializers.SerializerMethodField()
     students = serializers.SerializerMethodField()
+    used_session_count = serializers.IntegerField()
 
     def get_teacher(self, obj):
         return obj.teacher.user.first_name
