@@ -7,6 +7,10 @@ User = get_user_model()
 class Teacher(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    @property
+    def display_name(self):
+        return self.user.first_name
+
     def __str__(self):
         return f"{self.user.username}"
 

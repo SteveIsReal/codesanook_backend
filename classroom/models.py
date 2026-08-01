@@ -1,6 +1,12 @@
 from django.db import models
 from member.models import Teacher, Student
 
+'''
+>>> from django.db.models import Q
+>>> Course.objects.filter(Q(start_time__gte="09:00") | Q(end_time__lte='11:00'))
+<QuerySet [<Course: Python 101 with Patrick on FRIDAY>]>
+'''
+
 
 WEEKDAYS = [
     ('SUNDAY', 'sunday'),
@@ -18,6 +24,15 @@ class Room(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+class CourseManager(models.Manager):
+    def check_available(self, start_time, end_time, weekdays, room) -> bool: #True if there isn't
+        return self.filter(
+            models.Q(weekday=weekdays) & 
+            models.Q(room=room) & 
+            models.Q(start_time__lte=end_time) & 
+            models.Q(end_time__gte=start_time) 
+        )
+
 class Course(models.Model):
     name = models.CharField(max_length=100)
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
@@ -29,13 +44,39 @@ class Course(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     max_session = models.IntegerField(default=10)
+    objects = CourseManager()
 
     @property
     def used_session_count(self):
         return self.sessions.count()
 
+    @property
+    def teacher_name(self):
+        return self.teacher.display_name
+
+    @property
+    def room_name(self):
+        return self.room.name
+
+    @property
+    def students_name(self):
+        return [student.name for student in self.students.all()]
+
+    """
+    def check_available(self, start_time, end_time, weekdays, room) -> bool: #True if there isn't
+        print("======================")
+        print(self.id)
+        print("======================")
+        return self.objects.filter(
+            models.Q(weekday=weekdays) & 
+            models.Q(room=room) & 
+            models.Q(start_time__lte=end_time) & 
+            models.Q(end_time__gte=start_time) 
+        )
+    """
+
     def __str__(self):
-        return f"{self.name} with {self.teacher} on {self.weekday}"
+        return f"{self.name} with {self.teacher} on {self.weekday} ({self.start_time} : {self.end_time})"
 
 class Session(models.Model):
     course = models.ForeignKey(Course, related_name="sessions", on_delete=models.CASCADE)
@@ -57,6 +98,6 @@ class Attendance(models.Model):
     session = models.ForeignKey(Session, related_name='attendances', on_delete=models.CASCADE)
     student = models.ForeignKey(Student, related_name='attendances', on_delete=models.CASCADE)
     comment = models.TextField()
-    
+
     def __str__(self):
         return f"{self.session} > {self.student}"

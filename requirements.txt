@@ -9,3 +9,4 @@ pillow==12.1.1
 PyJWT==2.12.1
 sqlparse==0.5.5
 wheel==0.46.3
+django-filter==26.1

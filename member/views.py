@@ -1,8 +1,10 @@
 from rest_framework import viewsets
 from rest_framework.generics import ListAPIView, CreateAPIView
 from django.contrib.auth.models import User
+from django_filters import rest_framework as filters
 from member.models import *
 from member.serializers import *
+from member.filters import StudentFilter
 
 class TeacherViewset(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
@@ -15,6 +17,8 @@ class UserViewset(viewsets.ModelViewSet):
 class StudentViewset(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
+    # filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = StudentFilter
 
 class AddCreditView(CreateAPIView):
     queryset = CreditTransaction.objects.all()
