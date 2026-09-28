@@ -5,6 +5,7 @@ from classroom.views import *
 router = DefaultRouter()
 router.register("room", RoomViewset)
 router.register("course", CouseViewset)
+router.register("time_slot", TimeSlotViewset)
 
 urlpatterns = [
     path('', include(router.urls))

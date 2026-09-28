@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
-
 User = get_user_model()
 
 class Teacher(models.Model):
@@ -35,6 +34,7 @@ class CreditTransaction(models.Model):
     date_time = models.DateTimeField(auto_now_add=True)
     credit = models.IntegerField()
     note = models.TextField(null=True, blank=True)
+    #exp 
 
     def recalculate_credit(self):
         current_credit = sum([i.credit for i in CreditTransaction.objects.filter(student=self.student)])

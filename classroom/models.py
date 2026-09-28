@@ -7,6 +7,11 @@ from member.models import Teacher, Student
 <QuerySet [<Course: Python 101 with Patrick on FRIDAY>]>
 '''
 
+'''
+TimeSlot -> Course; Course -< TimeSlot
+
+'''
+
 
 WEEKDAYS = [
     ('SUNDAY', 'sunday'),
@@ -21,10 +26,14 @@ WEEKDAYS = [
 class Room(models.Model):
     name = models.CharField(max_length=100)
 
+    @property
+    def display_name(self):
+        return f"{self.name}"
+
     def __str__(self):
         return f"{self.name}"
 
-class CourseManager(models.Manager):
+class TimeSlotManager(models.Manager):
     def check_available(self, start_time, end_time, weekdays, room) -> bool: #True if there isn't
         return self.filter(
             models.Q(weekday=weekdays) & 
@@ -37,14 +46,10 @@ class Course(models.Model):
     name = models.CharField(max_length=100)
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
     students = models.ManyToManyField(Student, blank=True)
-    weekday = models.CharField(choices=WEEKDAYS, max_length=9)
     deduct_credit = models.IntegerField()
     active = models.BooleanField(default=True)
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
     max_session = models.IntegerField(default=10)
-    objects = CourseManager()
+    # objects = CourseManager()
 
     @property
     def used_session_count(self):
@@ -62,21 +67,23 @@ class Course(models.Model):
     def students_name(self):
         return [student.name for student in self.students.all()]
 
-    """
-    def check_available(self, start_time, end_time, weekdays, room) -> bool: #True if there isn't
-        print("======================")
-        print(self.id)
-        print("======================")
-        return self.objects.filter(
-            models.Q(weekday=weekdays) & 
-            models.Q(room=room) & 
-            models.Q(start_time__lte=end_time) & 
-            models.Q(end_time__gte=start_time) 
-        )
-    """
+    def __str__(self):
+        return f"{self.name} with {self.teacher}"
+
+class TimeSlot(models.Model):
+    weekday = models.CharField(choices=WEEKDAYS, max_length=9)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="time_slots")
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, related_name="time_slots")
+    objects = TimeSlotManager()
+
+    @property
+    def room_name(self):
+        return self.room.display_name
 
     def __str__(self):
-        return f"{self.name} with {self.teacher} on {self.weekday} ({self.start_time} : {self.end_time})"
+        return f"{self.weekday}, {self.start_time}:{self.end_time}, {self.course}"
 
 class Session(models.Model):
     course = models.ForeignKey(Course, related_name="sessions", on_delete=models.CASCADE)

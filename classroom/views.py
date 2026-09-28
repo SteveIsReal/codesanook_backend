@@ -9,3 +9,7 @@ class RoomViewset(viewsets.ModelViewSet):
 class CouseViewset(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+
+class TimeSlotViewset(viewsets.ModelViewSet):
+    queryset = TimeSlot.objects.all()
+    serializer_class = TimeSlotSerializer
