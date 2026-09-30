@@ -17,3 +17,11 @@ class RoomAdmin(admin.ModelAdmin):
 @admin.register(TimeSlot)
 class TimeSlotAdmin(admin.ModelAdmin):
     pass
+
+@admin.register(Subject)
+class SubjectAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(Curriculum)
+class CurriculumAdmin(admin.ModelAdmin):
+    pass

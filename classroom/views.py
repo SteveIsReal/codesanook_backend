@@ -13,3 +13,19 @@ class CouseViewset(viewsets.ModelViewSet):
 class TimeSlotViewset(viewsets.ModelViewSet):
     queryset = TimeSlot.objects.all()
     serializer_class = TimeSlotSerializer
+
+class SubjectViewset(viewsets.ModelViewSet):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+
+class CurriculumViewset(viewsets.ModelViewSet):
+    queryset = Curriculum.objects.all()
+    serializer_class = CurriculumSerializer
+
+class SessionViewset(viewsets.ModelViewSet):
+    queryset = Session.objects.all()
+    serializer_class = SessionSerializer
+
+class AttendanceViewset(viewsets.ModelViewSet):
+    queryset = Attendance.objects.all()
+    serializer_class = AttendanceSerializer

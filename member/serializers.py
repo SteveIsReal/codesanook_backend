@@ -46,10 +46,14 @@ class TeacherSerializer(serializers.ModelSerializer):
 class StudentSerializer(serializers.ModelSerializer):
 
     course = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
 
     def get_course(self, obj):
         #return CourseSerializer(obj.course_set.all(), many=True).data
         return [c.name for c in obj.course_set.all()]
+
+    def get_name(self, obj):
+        return f"{obj.get_name}"
 
     class Meta:
         model = Student

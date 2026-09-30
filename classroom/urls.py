@@ -6,6 +6,10 @@ router = DefaultRouter()
 router.register("room", RoomViewset)
 router.register("course", CouseViewset)
 router.register("time_slot", TimeSlotViewset)
+router.register("subject", SubjectViewset)
+router.register("curriculum", CurriculumViewset)
+router.register("session", SessionViewset)
+router.register("attendance", AttendanceViewset)
 
 urlpatterns = [
     path('', include(router.urls))

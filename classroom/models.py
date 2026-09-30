@@ -23,6 +23,13 @@ WEEKDAYS = [
     ('SATURDAY', 'saturday')
 ]
 
+PRESENT_STATUS = [
+    ('PRESENT', 'present'),
+    ('EXCUSE', 'excuse'),
+    ('SICK LEAVE', 'sick leave'),
+    ('ABSENT', 'absent')
+]
+
 class Room(models.Model):
     name = models.CharField(max_length=100)
 
@@ -42,6 +49,37 @@ class TimeSlotManager(models.Manager):
             models.Q(end_time__gte=start_time) 
         )
 
+class Subject(models.Model):
+    topic = models.CharField(max_length=100)
+    objective = models.TextField()
+    file = models.FileField(null=True, blank=True)
+
+    def __str__(self):
+        return self.topic
+
+class Curriculum(models.Model):
+    name = models.CharField(max_length=100) 
+    subjects = models.ManyToManyField(Subject, null=True, blank=True)
+    file = models.FileField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+class TimeSlot(models.Model):
+    weekday = models.CharField(choices=WEEKDAYS, max_length=9)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    # course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="time_slots")
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, related_name="time_slots")
+    objects = TimeSlotManager()
+
+    @property
+    def room_name(self):
+        return self.room.display_name
+
+    def __str__(self):
+        return f"{self.weekday}, {self.start_time}:{self.end_time}, {[i.name for i in self.course_set.all()]}"
+
 class Course(models.Model):
     name = models.CharField(max_length=100)
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
@@ -49,6 +87,9 @@ class Course(models.Model):
     deduct_credit = models.IntegerField()
     active = models.BooleanField(default=True)
     max_session = models.IntegerField(default=10)
+    time_slots = models.ManyToManyField(TimeSlot, null=True, blank=True)
+    curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE, null=True)
+
     # objects = CourseManager()
 
     @property
@@ -64,34 +105,29 @@ class Course(models.Model):
         return self.room.name
 
     @property
+    def curriculum_name(self):
+        return self.curriculum.name
+
+    @property
+    def display_time_slot(self):
+        return [(f"{time_slot.start_time}-{time_slot.end_time} on {str(time_slot.weekday).capitalize()} at {time_slot.room.name}") for time_slot in self.time_slots.all()]
+
+    @property
     def students_name(self):
-        return [student.name for student in self.students.all()]
+        return [student.get_name for student in self.students.all()]
+        # return [student.registered_individual.first_name for student in self.students.all()]
 
     def __str__(self):
         return f"{self.name} with {self.teacher}"
-
-class TimeSlot(models.Model):
-    weekday = models.CharField(choices=WEEKDAYS, max_length=9)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="time_slots")
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, related_name="time_slots")
-    objects = TimeSlotManager()
-
-    @property
-    def room_name(self):
-        return self.room.display_name
-
-    def __str__(self):
-        return f"{self.weekday}, {self.start_time}:{self.end_time}, {self.course}"
 
 class Session(models.Model):
     course = models.ForeignKey(Course, related_name="sessions", on_delete=models.CASCADE)
     date_time = models.DateTimeField(auto_now_add=True)
     comment = models.TextField()
+    subject = models.ForeignKey(Subject, null=True, on_delete=models.CASCADE)
 
     def __update_course_status(self):
-        self.course.active = self.course.max_session > self.course.session_set.count()
+        self.course.active = self.course.max_session > self.course.sessions.count()
         self.course.save()
     
     def save(self, *args, **kwargs):
@@ -104,7 +140,11 @@ class Session(models.Model):
 class Attendance(models.Model):
     session = models.ForeignKey(Session, related_name='attendances', on_delete=models.CASCADE)
     student = models.ForeignKey(Student, related_name='attendances', on_delete=models.CASCADE)
+    status = models.CharField(choices=PRESENT_STATUS, null=True)
     comment = models.TextField()
+
+    # def save(self, *args, **kwargs):
+    #     return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.session} > {self.student}"
