@@ -77,6 +77,10 @@ class TimeSlot(models.Model):
     def room_name(self):
         return self.room.display_name
 
+    @property
+    def time(self):
+        return [self.start_time, self.end_time]
+
     def __str__(self):
         return f"{self.weekday}, {self.start_time}:{self.end_time}, {[i.name for i in self.course_set.all()]}"
 

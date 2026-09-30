@@ -5,23 +5,41 @@ from classroom.models import *
 class TimeSlotSerializer(serializers.ModelSerializer):
 
     room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all())
-    room_name = serializers.CharField()
+    room_name = serializers.CharField(read_only=True)
+    time = serializers.ListField()
 
     def validate(self, attrs):
-        avaliable_qs = TimeSlot.objects.check_avaliable(
+        avaliable_qs = TimeSlot.objects.check_available(
             start_time=attrs['start_time'],
             end_time=attrs['end_time'],
-            weekday=attrs['weekday'],
+            weekdays=attrs['weekday'],
             room=attrs['room']
         )
 
         if self.instance:
             avaliable_qs = avaliable_qs.exclude(id=self.instance.id)
 
-        if avaliable_qs.exist():
+        if avaliable_qs.exists():
             return serializers.ValidationError({"info": "nah"})
 
         return super().validate(attrs)
+
+    def update(self, instance, validated_data):
+        time = validated_data.pop("time", [])
+
+        if time:
+            instance.start_time = time[0]
+            instance.end_time = time[1]
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+
+    def create(self, validated_data):
+        time = validated_data.pop("time", [])
+        return super().create(validated_data)
 
     class Meta:
         model = TimeSlot
@@ -40,9 +58,11 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         students = validated_data.pop("students", [])
+        time_slots = validated_data.pop("time_slots", [])
 
         course = Course.objects.create(**validated_data)
         course.students.set(students)
+        course.time_slots.set(time_slots)
 
         return course
 
