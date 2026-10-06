@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from member.models import *
-from classroom.serializer import CourseSerializer
+from classroom.serializers import CourseSerializer
 from django.contrib.auth.models import User
 
 

@@ -25,7 +25,7 @@ class Student(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     nickname = models.CharField(max_length=100)
-    # picture = models.ImageField(null=True, blank=True)
+    picture = models.ImageField(null=True, blank=True)
     school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True)
     current_credit = models.IntegerField(default=0)
     is_student = models.BooleanField(default=False, null=True) #Cuz, some of the registered people don't become real student

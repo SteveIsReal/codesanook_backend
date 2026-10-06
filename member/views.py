@@ -49,4 +49,5 @@ class ListCreditView(ListAPIView):
 class ListSchoolView(ListAPIView):
     queryset = School.objects.all()
     serializer_class = SchoolSerializer
+    pagination_class = None
     

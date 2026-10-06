@@ -1,5 +1,6 @@
 from django.db import models
 from member.models import Teacher, Student
+import json
 
 '''
 >>> from django.db.models import Q
@@ -59,7 +60,7 @@ class Subject(models.Model):
 
 class Curriculum(models.Model):
     name = models.CharField(max_length=100) 
-    subjects = models.ManyToManyField(Subject, null=True, blank=True)
+    subjects = models.ManyToManyField(Subject, blank=True)
     file = models.FileField(null=True, blank=True)
 
     def __str__(self):
@@ -69,7 +70,6 @@ class TimeSlot(models.Model):
     weekday = models.CharField(choices=WEEKDAYS, max_length=9)
     start_time = models.TimeField()
     end_time = models.TimeField()
-    # course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="time_slots")
     room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, related_name="time_slots")
     objects = TimeSlotManager()
 
@@ -91,7 +91,7 @@ class Course(models.Model):
     deduct_credit = models.IntegerField()
     active = models.BooleanField(default=True)
     max_session = models.IntegerField(default=10)
-    time_slots = models.ManyToManyField(TimeSlot, null=True, blank=True)
+    time_slots = models.ManyToManyField(TimeSlot, blank=True)
     curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE, null=True)
 
     # objects = CourseManager()
@@ -126,9 +126,12 @@ class Course(models.Model):
 
 class Session(models.Model):
     course = models.ForeignKey(Course, related_name="sessions", on_delete=models.CASCADE)
-    date_time = models.DateTimeField(auto_now_add=True)
+    create_date = models.DateTimeField(auto_now_add=True, null=True)
+    update_date = models.DateTimeField(auto_now=True, null=True)
+    session_date = models.DateField(null=True)
     comment = models.TextField()
-    subject = models.ForeignKey(Subject, null=True, on_delete=models.CASCADE)
+    time_slot = models.ForeignKey(TimeSlot, on_delete=models.CASCADE, null=True)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, null=True)
 
     def __update_course_status(self):
         self.course.active = self.course.max_session > self.course.sessions.count()
@@ -139,12 +142,12 @@ class Session(models.Model):
         self.__update_course_status()
 
     def __str__(self):
-        return f"{self.course} @ {self.date_time}"
+        return f"{self.course} @ {self.session_date}"
 
 class Attendance(models.Model):
     session = models.ForeignKey(Session, related_name='attendances', on_delete=models.CASCADE)
     student = models.ForeignKey(Student, related_name='attendances', on_delete=models.CASCADE)
-    status = models.CharField(choices=PRESENT_STATUS, null=True)
+    status = models.CharField(max_length=10, choices=PRESENT_STATUS, null=True)
     comment = models.TextField()
 
     # def save(self, *args, **kwargs):
