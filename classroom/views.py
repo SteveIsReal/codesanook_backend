@@ -1,16 +1,39 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+from account.authenticate import IsTeacherOrAdmin, IsAdmin
 from classroom.models import *
 from classroom.serializers import *
+from member.models import Teacher
+from .filters import CourseFilter
 
 class RoomViewset(viewsets.ModelViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsTeacherOrAdmin]
+        else:
+            permission_classes = [IsAdmin]
+        return [permission() for permission in permission_classes]
 
 class CouseViewset(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    filterset_class = CourseFilter
+
+    def get_queryset(self):
+        if self.request.user.groups.filter(name="admin"):
+            return Course.objects.all()
+        return Course.objects.filter(teacher=Teacher.objects.filter(user=self.request.user).first())
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'sessions', 'curriculum', 'time_slots']:
+            permission_classes = [IsTeacherOrAdmin]
+        else:
+            permission_classes = [IsAdmin]
+        return [permission() for permission in permission_classes]
 
     @action(detail=True, methods=['get'])
     def sessions(self, request, pk=None):
@@ -43,18 +66,38 @@ class CouseViewset(viewsets.ModelViewSet):
 class TimeSlotViewset(viewsets.ModelViewSet):
     queryset = TimeSlot.objects.all()
     serializer_class = TimeSlotSerializer
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsTeacherOrAdmin]
+        else:
+            permission_classes = [IsAdmin]
+        return [permission() for permission in permission_classes]
+
 
 class SubjectViewset(viewsets.ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsTeacherOrAdmin]
+        else:
+            permission_classes = [IsAdmin]
+        return [permission() for permission in permission_classes]
 
 class CurriculumViewset(viewsets.ModelViewSet):
     queryset = Curriculum.objects.all()
     serializer_class = CurriculumSerializer
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsTeacherOrAdmin]
+        else:
+            permission_classes = [IsAdmin]
+        return [permission() for permission in permission_classes]
 
 class SessionViewset(viewsets.ModelViewSet):
     queryset = Session.objects.all()
     serializer_class = SessionSerializer
+    permission_classes = [IsTeacherOrAdmin]
 
     def create(self, request, *args, **kwargs):
         students = request.data.pop("students", [])
@@ -87,3 +130,4 @@ class SessionViewset(viewsets.ModelViewSet):
 class AttendanceViewset(viewsets.ModelViewSet):
     queryset = Attendance.objects.all()
     serializer_class = AttendanceSerializer
+    permission_classes = [IsTeacherOrAdmin]

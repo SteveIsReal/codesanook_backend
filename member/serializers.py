@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id','first_name', 'last_name', 'username', 'email','password']
+        fields = ['id','first_name', 'last_name', 'username', 'email','password', 'groups']
         extra_kwargs = {
             'password' : {'write_only' : True}
         }
@@ -23,7 +23,10 @@ class TeacherSerializer(serializers.ModelSerializer):
     def create(self, vaildated_data):
         user_data = vaildated_data.pop("user")
 
-        user_instance = User.objects.create(**user_data)
+        user_instance = User.objects.create_user(**user_data)
+        user_instance.groups.set([1])
+        print("PASSWORD")
+        print(user_instance.password)
         teacher_instance = Teacher.objects.create(user=user_instance)
 
         return teacher_instance

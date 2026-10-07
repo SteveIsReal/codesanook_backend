@@ -1,17 +1,5 @@
 from django.db import models
 from member.models import Teacher, Student
-import json
-
-'''
->>> from django.db.models import Q
->>> Course.objects.filter(Q(start_time__gte="09:00") | Q(end_time__lte='11:00'))
-<QuerySet [<Course: Python 101 with Patrick on FRIDAY>]>
-'''
-
-'''
-TimeSlot -> Course; Course -< TimeSlot
-
-'''
 
 
 WEEKDAYS = [
