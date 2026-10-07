@@ -20,6 +20,11 @@ class StudentViewset(viewsets.ModelViewSet):
     # filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = StudentFilter
 
+    def paginate_queryset(self, queryset):
+        if "is_student" in self.request.query_params:
+            return None
+        return super().paginate_queryset(queryset)
+
 class AddCreditView(CreateAPIView):
     queryset = CreditTransaction.objects.all()
     serializer_class = AddCreditTrasactionSerializer
