@@ -10,6 +10,10 @@ class TeacherAdmin(admin.ModelAdmin):
 class StudentAdmin(admin.ModelAdmin):
     readonly_fields = ['current_credit']
 
+@admin.register(Lead)
+class LeadAdmin(admin.ModelAdmin):
+    pass
+
 @admin.register(School)
 class SchoolAdmin(admin.ModelAdmin):
     pass

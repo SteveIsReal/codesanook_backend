@@ -1,5 +1,4 @@
 from django.db import models
-from member.models import Teacher, Student
 
 
 WEEKDAYS = [
@@ -7,7 +6,7 @@ WEEKDAYS = [
     ('MONDAY', 'monday'),
     ('TUESDAY', 'tuesday'),
     ('WEDNESDAY', 'wednesday'),
-    ('THRUSDAY', 'thrusday'),
+    ('THURSDAY', 'thrusday'),
     ('FRIDAY','friday'),
     ('SATURDAY', 'saturday')
 ]
@@ -32,10 +31,10 @@ class Room(models.Model):
 class TimeSlotManager(models.Manager):
     def check_available(self, start_time, end_time, weekdays, room) -> bool: #True if there isn't
         return self.filter(
-            models.Q(weekday=weekdays) & 
+            models.Q(schedule__weekday=weekdays) & 
             models.Q(room=room) & 
-            models.Q(start_time__lte=end_time) & 
-            models.Q(end_time__gte=start_time) 
+            models.Q(schedule__start_time__lte=end_time) & 
+            models.Q(schedule__end_time__gte=start_time) 
         )
 
 class Subject(models.Model):
@@ -54,10 +53,20 @@ class Curriculum(models.Model):
     def __str__(self):
         return self.name
 
-class TimeSlot(models.Model):
+class Schedule(models.Model):
     weekday = models.CharField(choices=WEEKDAYS, max_length=9)
     start_time = models.TimeField()
-    end_time = models.TimeField()
+    end_time = models.TimeField()   
+
+    @property
+    def time(self):
+        return [self.start_time ,self.end_time]
+
+    def __str__(self):
+        return f"{self.weekday}, {self.start_time.strftime("%H:%M")}-{self.end_time.strftime("%H:%M")}"
+
+class TimeSlot(models.Model):
+    schedule = models.ForeignKey(Schedule, on_delete=models.SET_NULL, null=True, related_name="time_slots")
     room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, related_name="time_slots")
     objects = TimeSlotManager()
 
@@ -66,16 +75,20 @@ class TimeSlot(models.Model):
         return self.room.display_name
 
     @property
-    def time(self):
-        return [self.start_time, self.end_time]
+    def display_time_slot(self):
+        return f"{str(self.schedule)} {self.room.display_name}"
 
+    @property
+    def time(self):
+        return self.schedule.time
+    
     def __str__(self):
-        return f"{self.weekday}, {self.start_time}:{self.end_time}, {[i.name for i in self.course_set.all()]}"
+        return f"{self.schedule.weekday}, {self.schedule.time}, {[i.name for i in self.course_set.all()]}"
 
 class Course(models.Model):
     name = models.CharField(max_length=100)
-    teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
-    students = models.ManyToManyField(Student, blank=True)
+    teacher = models.ForeignKey('member.Teacher', on_delete=models.SET_NULL, null=True, blank=True)
+    students = models.ManyToManyField("member.Student", blank=True) 
     deduct_credit = models.IntegerField()
     active = models.BooleanField(default=True)
     max_session = models.IntegerField(default=10)
@@ -134,7 +147,7 @@ class Session(models.Model):
 
 class Attendance(models.Model):
     session = models.ForeignKey(Session, related_name='attendances', on_delete=models.CASCADE)
-    student = models.ForeignKey(Student, related_name='attendances', on_delete=models.CASCADE)
+    student = models.ForeignKey("member.Student", related_name='attendances', on_delete=models.CASCADE)
     status = models.CharField(max_length=10, choices=PRESENT_STATUS, null=True)
     comment = models.TextField()
 

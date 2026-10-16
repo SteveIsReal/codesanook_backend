@@ -10,6 +10,7 @@ router.register("subject", SubjectViewset)
 router.register("curriculum", CurriculumViewset)
 router.register("session", SessionViewset)
 router.register("attendance", AttendanceViewset)
+router.register("schedule", ScheduleViewset)
 
 urlpatterns = [
     path('', include(router.urls))

@@ -1,12 +1,13 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 
 from account.authenticate import IsTeacherOrAdmin, IsAdmin
 from classroom.models import *
 from classroom.serializers import *
 from member.models import Teacher
-from .filters import CourseFilter
+from .filters import CourseFilter, ScheduleFilter
 
 class RoomViewset(viewsets.ModelViewSet):
     queryset = Room.objects.all()
@@ -26,7 +27,7 @@ class CouseViewset(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user.groups.filter(name="admin"):
             return Course.objects.all()
-        return Course.objects.filter(teacher=Teacher.objects.filter(user=self.request.user).first())
+        return Course.objects.filter(teacher__user=self.request.user)
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve', 'sessions', 'curriculum', 'time_slots']:
@@ -63,20 +64,50 @@ class CouseViewset(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
+class ScheduleViewset(viewsets.ModelViewSet):
+    queryset = Schedule.objects.all()
+    serializer_class = ScheduleSerializer
+    filterset_class = ScheduleFilter
+
+    # def list(self, request, *args, **kwargs):
+    #     data = self.get_queryset().filter(weekday__in=request.data.get("weekdays", ""))
+    #     return Response(ScheduleSerializer(data, many=True).data)
+
+    def get_permissions(self):
+        if self.action in ['list']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAdmin]
+        return [permission() for permission in permission_classes]
+
+    def paginate_queryset(self, queryset):
+        if self.request.query_params.get("pagination", False):
+            return None
+        return super().paginate_queryset(queryset)
+
 class TimeSlotViewset(viewsets.ModelViewSet):
     queryset = TimeSlot.objects.all()
     serializer_class = TimeSlotSerializer
+
     def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list']:
+            permission_classes = [AllowAny]
+        elif self.action in ['retrieve']:
             permission_classes = [IsTeacherOrAdmin]
         else:
             permission_classes = [IsAdmin]
         return [permission() for permission in permission_classes]
 
+    def paginate_queryset(self, queryset):
+        if self.request.query_params.get("pagination", False):
+            return None
+        return super().paginate_queryset(queryset)
+
 
 class SubjectViewset(viewsets.ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
+
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             permission_classes = [IsTeacherOrAdmin]
@@ -87,12 +118,20 @@ class SubjectViewset(viewsets.ModelViewSet):
 class CurriculumViewset(viewsets.ModelViewSet):
     queryset = Curriculum.objects.all()
     serializer_class = CurriculumSerializer
+
     def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list']:
+            permission_classes = [AllowAny]
+        elif self.action in ['retrieve']:
             permission_classes = [IsTeacherOrAdmin]
         else:
             permission_classes = [IsAdmin]
         return [permission() for permission in permission_classes]
+
+    def paginate_queryset(self, queryset):
+        if self.request.query_params.get("pagination", False):
+            return None
+        return super().paginate_queryset(queryset)
 
 class SessionViewset(viewsets.ModelViewSet):
     queryset = Session.objects.all()

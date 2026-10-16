@@ -21,3 +21,13 @@ class IsTeacherOrAdmin(BasePermission):
       request.user.is_authenticated and 
       request.user.groups.filter(name__in=["teacher", "admin"]).exists()
     )
+
+class IsTeacherOrAdminForMutationsElsePublic(BasePermission):
+    def has_permission(self, request, view):
+        if request.method == 'POST':
+          return True
+        
+        if not request.user or not request.user.is_authenticated:
+          return False
+            
+        return request.user.groups.filter(name__in=['teacher', 'admin']).exists()

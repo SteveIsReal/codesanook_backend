@@ -1,10 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.generics import ListAPIView, CreateAPIView
+from rest_framework.permissions import AllowAny
 from django.contrib.auth.models import User
 from django_filters import rest_framework as filters
 from member.models import *
 from member.serializers import *
-from member.filters import StudentFilter
+from member.filters import StudentFilter, LeadFilter
+from account.authenticate import IsTeacherOrAdminForMutationsElsePublic
 
 class TeacherViewset(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
@@ -21,9 +23,15 @@ class StudentViewset(viewsets.ModelViewSet):
     filterset_class = StudentFilter
 
     def paginate_queryset(self, queryset):
-        if "is_student" in self.request.query_params:
+        if self.request.query_params.get("pagination", False):
             return None
         return super().paginate_queryset(queryset)
+
+class LeadViewset(viewsets.ModelViewSet):
+    queryset = Lead.objects.all()
+    serializer_class = LeadSerializer
+    filterset_class = LeadFilter
+    permission_classes = [IsTeacherOrAdminForMutationsElsePublic]
 
 class AddCreditView(CreateAPIView):
     queryset = CreditTransaction.objects.all()
@@ -54,5 +62,9 @@ class ListCreditView(ListAPIView):
 class ListSchoolView(ListAPIView):
     queryset = School.objects.all()
     serializer_class = SchoolSerializer
+    permission_classes = [AllowAny]
     pagination_class = None
     
+class SchoolViewset(viewsets.ModelViewSet):
+    queryset = School.objects.all()
+    serializer_class = SchoolSerializer

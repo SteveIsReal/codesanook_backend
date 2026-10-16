@@ -14,6 +14,10 @@ class SessionAdmin(admin.ModelAdmin):
 class RoomAdmin(admin.ModelAdmin):
     pass
 
+@admin.register(Schedule)
+class ScheduleAdmin(admin.ModelAdmin):
+    pass
+
 @admin.register(TimeSlot)
 class TimeSlotAdmin(admin.ModelAdmin):
     pass

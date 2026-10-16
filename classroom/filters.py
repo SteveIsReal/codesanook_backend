@@ -1,4 +1,4 @@
-from .models import Course
+from .models import Course, Schedule
 import django_filters
 
 class CourseFilter(django_filters.FilterSet):
@@ -6,3 +6,9 @@ class CourseFilter(django_filters.FilterSet):
   class Meta:
     model = Course
     fields = ["name"]
+
+class ScheduleFilter(django_filters.FilterSet):
+  weekdays = django_filters.BaseInFilter(field_name="weekday", lookup_expr="in")
+  class Meta:
+    model = Schedule
+    fields = ["weekdays"]

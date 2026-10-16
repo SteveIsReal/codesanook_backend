@@ -6,6 +6,8 @@ router = DefaultRouter()
 router.register('teacher', TeacherViewset)
 router.register('user', UserViewset)
 router.register('student', StudentViewset)
+router.register('lead', LeadViewset)
+router.register('school', SchoolViewset)
 
 urlpatterns = [
     path('add_credit/', AddCreditView.as_view()),

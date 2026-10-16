@@ -1,18 +1,39 @@
 from rest_framework import serializers
+from member.models import Teacher, Student
 from classroom.models import *
+
+
+class ScheduleSerializer(serializers.ModelSerializer):
+
+    def validate(self, attrs):
+        if Schedule.objects.filter(
+            weekday=attrs.get("weekday"), 
+            start_time=attrs.get("start_time"),
+            end_time=attrs.get("end_time")):
+            raise serializers.ValidationError({"message": "This schedule is already exists"})
+        return super().validate(attrs)
+
+    class Meta:
+        model = Schedule
+        fields ="__all__"
 
 
 class TimeSlotSerializer(serializers.ModelSerializer):
 
     room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all())
     room_name = serializers.CharField(read_only=True)
-    time = serializers.ListField()
+    schedule_object = serializers.SerializerMethodField()
+    display_time_slot = serializers.CharField(read_only=True)
+
+    def get_schedule_object(self, obj):
+        return ScheduleSerializer(obj.schedule).data
+
 
     def validate(self, attrs):
         avaliable_qs = TimeSlot.objects.check_available(
-            start_time=attrs['start_time'],
-            end_time=attrs['end_time'],
-            weekdays=attrs['weekday'],
+            start_time=attrs['schedule'].start_time,
+            end_time=attrs['schedule'].end_time,
+            weekdays=attrs['schedule'].weekday,
             room=attrs['room']
         )
 
@@ -20,8 +41,7 @@ class TimeSlotSerializer(serializers.ModelSerializer):
             avaliable_qs = avaliable_qs.exclude(id=self.instance.id)
 
         if avaliable_qs.exists():
-            print("1111111")
-            raise serializers.ValidationError({"info": "nah"})
+            raise serializers.ValidationError({"message": "This time slot is overlaping"})
 
         return super().validate(attrs)
 
@@ -39,7 +59,6 @@ class TimeSlotSerializer(serializers.ModelSerializer):
         return instance
 
     def create(self, validated_data):
-        time = validated_data.pop("time", [])
         return super().create(validated_data)
 
     class Meta:
@@ -56,6 +75,7 @@ class CourseSerializer(serializers.ModelSerializer):
     teacher_name = serializers.CharField(read_only=True)
     curriculum_name = serializers.CharField(read_only=True)
     display_time_slot = serializers.ListField(read_only=True)
+    time_slot_obj = serializers.SerializerMethodField(read_only=True)
 
 
     def create(self, validated_data):
@@ -67,6 +87,9 @@ class CourseSerializer(serializers.ModelSerializer):
         course.time_slots.set(time_slots)
 
         return course
+
+    def get_time_slot_obj(self, obj):
+        return TimeSlotSerializer(obj.time_slots.all(), many=True).data
 
     def get_students_obj(self, obj):
         from member.serializers import StudentSerializer

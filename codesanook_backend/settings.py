@@ -26,8 +26,7 @@ SECRET_KEY = 'django-insecure-+-g!+8d-inz$o^ki3ow7^8+p8s!q7t$knh#vkcm-4)zcraji^2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -107,7 +106,6 @@ SIMPLE_JWT = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from member.models import *
-from classroom.serializers import CourseSerializer
+from classroom.serializers import CourseSerializer, ScheduleSerializer
 from django.contrib.auth.models import User
 
 
@@ -46,10 +46,37 @@ class TeacherSerializer(serializers.ModelSerializer):
         model = Teacher
         fields = "__all__"
 
+class LeadSerializer(serializers.ModelSerializer):
+
+    name = serializers.SerializerMethodField()
+    age = serializers.SerializerMethodField()
+    registered = serializers.SerializerMethodField()
+    available_schedule_obj = serializers.SerializerMethodField(read_only=True)
+
+    def get_available_schedule_obj(self, obj):
+        return ScheduleSerializer(obj.available_schedule, many=True).data
+
+    def get_registered(self, obj):
+        return obj.student.all().exists()
+
+    def get_name(self, obj):
+        return f"{obj.get_name}"
+
+    def get_age(self, obj):
+        return obj.age
+
+    class Meta:
+        model = Lead
+        fields = "__all__"
+
 class StudentSerializer(serializers.ModelSerializer):
 
     course = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
+    lead_obj = serializers.SerializerMethodField()
+
+    def get_lead_obj(self, obj):
+        return LeadSerializer(obj.lead).data
 
     def get_course(self, obj):
         #return CourseSerializer(obj.course_set.all(), many=True).data
