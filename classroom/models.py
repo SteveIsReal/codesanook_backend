@@ -93,7 +93,7 @@ class Course(models.Model):
     active = models.BooleanField(default=True)
     max_session = models.IntegerField(default=10)
     time_slots = models.ManyToManyField(TimeSlot, blank=True)
-    curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE, null=True)
+    curriculum = models.ForeignKey(Curriculum, on_delete=models.SET_NULL, null=True)
 
     # objects = CourseManager()
 
@@ -131,8 +131,8 @@ class Session(models.Model):
     update_date = models.DateTimeField(auto_now=True, null=True)
     session_date = models.DateField(null=True)
     comment = models.TextField()
-    time_slot = models.ForeignKey(TimeSlot, on_delete=models.CASCADE, null=True)
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, null=True)
+    time_slot = models.ForeignKey(TimeSlot, on_delete=models.SET_NULL, null=True)
+    subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True)
 
     def __update_course_status(self):
         self.course.active = self.course.max_session > self.course.sessions.count()

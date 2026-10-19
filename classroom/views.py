@@ -7,7 +7,7 @@ from account.authenticate import IsTeacherOrAdmin, IsAdmin
 from classroom.models import *
 from classroom.serializers import *
 from member.models import Teacher
-from .filters import CourseFilter, ScheduleFilter
+from .filters import CourseFilter, ScheduleFilter, TimeSlotFilter
 
 class RoomViewset(viewsets.ModelViewSet):
     queryset = Room.objects.all()
@@ -88,6 +88,7 @@ class ScheduleViewset(viewsets.ModelViewSet):
 class TimeSlotViewset(viewsets.ModelViewSet):
     queryset = TimeSlot.objects.all()
     serializer_class = TimeSlotSerializer
+    filterset_class = TimeSlotFilter
 
     def get_permissions(self):
         if self.action in ['list']:
