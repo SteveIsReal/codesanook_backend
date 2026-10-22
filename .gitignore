@@ -24,3 +24,5 @@ dist-ssr
 __pycache__/
 migrations/
 db.sqlite3
+
+.env

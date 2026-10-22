@@ -31,25 +31,25 @@ class Lead(models.Model):
     picture = models.ImageField(null=True, blank=True)
     school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True)
 
-    grade = models.CharField(choices=GRADE, max_length=14, null=True) #non none
+    grade = models.CharField(choices=GRADE, max_length=14) #non none
     register_date = models.DateField(auto_now=True)
-    birthday = models.DateField(null=True) #non none
+    birthday = models.DateField() #non none
     interested_course = models.ManyToManyField("classroom.Curriculum")
 
     WEEKDAYS
     available_day = models.JSONField(default=list)
     available_schedule = models.ManyToManyField("classroom.Schedule")
-    acquaint = models.CharField(max_length=100, null=True)   
+    acquaint = models.CharField(max_length=100)   
     recommender = models.CharField(max_length=100, null=True, blank=True)
 
-    parent_first_name = models.CharField(max_length=100, null=True)
-    parent_last_name = models.CharField(max_length=100, null=True)
-    relationship = models.CharField(max_length=6, choices=RELATIONSHIP,null=True)
+    parent_first_name = models.CharField(max_length=100)
+    parent_last_name = models.CharField(max_length=100)
+    relationship = models.CharField(max_length=6, choices=RELATIONSHIP)
     career = models.CharField(max_length=100, null=True, blank=True)
     company = models.CharField(max_length=100, null=True, blank=True)
-    phone = models.CharField(max_length=10, null=True)
-    email = models.EmailField(null=True)
-    id_line = models.CharField(max_length=100, null=True)
+    phone = models.CharField(max_length=10)
+    email = models.EmailField()
+    id_line = models.CharField(max_length=100)
 
     approve = models.BooleanField(default=False)
 

@@ -10,20 +10,25 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
+from dotenv import load_dotenv
 from pathlib import Path
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-+-g!+8d-inz$o^ki3ow7^8+p8s!q7t$knh#vkcm-4)zcraji^2'
+# SECRET_KEY = 'django-insecure-+-g!+8d-inz$o^ki3ow7^8+p8s!q7t$knh#vkcm-4)zcraji^2'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG = os.environ.get('DEBUG') == True
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
@@ -39,12 +44,23 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_filters',
     'corsheaders',
+    'channels',
     'rest_framework',
     'rest_framework_simplejwt',
     'classroom',
     'member',
     'account'
 ]
+
+ASGI_APPLICATION = "codesanook_backend.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+    }
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -98,7 +114,17 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
     'DEFAULT_PAGINATION_CLASS' : 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE' : 10
+    'PAGE_SIZE' : 10,
+    'DEFAULT_THORTTLE_CLASSES' : (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScoprdRateThrottle'
+    ),
+    'DEFAULT_THROTTLE_RATES' : {
+      'anon' : '50/hour',
+      'user' : '1000/hour',
+      'login' : '5/minute'
+    }
 }
 
 SIMPLE_JWT = {

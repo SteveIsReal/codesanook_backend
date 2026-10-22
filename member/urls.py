@@ -4,7 +4,7 @@ from member.views import *
 
 router = DefaultRouter()
 router.register('teacher', TeacherViewset)
-router.register('user', UserViewset)
+# router.register('user', UserViewset)
 router.register('student', StudentViewset)
 router.register('lead', LeadViewset)
 router.register('school', SchoolViewset)

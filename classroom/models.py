@@ -87,7 +87,7 @@ class TimeSlot(models.Model):
 
 class Course(models.Model):
     name = models.CharField(max_length=100)
-    teacher = models.ForeignKey('member.Teacher', on_delete=models.SET_NULL, null=True, blank=True)
+    teacher = models.ForeignKey('member.Teacher', on_delete=models.SET_NULL, null=True)
     students = models.ManyToManyField("member.Student", blank=True) 
     deduct_credit = models.IntegerField()
     active = models.BooleanField(default=True)
@@ -103,19 +103,19 @@ class Course(models.Model):
 
     @property
     def teacher_name(self):
-        return self.teacher.display_name
+        return self.teacher.display_name if self.teacher != None else None
 
-    @property
-    def room_name(self):
-        return self.room.name
+    # @property
+    # def room_name(self):
+    #     return self.room.name
 
     @property
     def curriculum_name(self):
-        return self.curriculum.name
+        return self.curriculum.name if self.curriculum != None else None
 
-    @property
-    def display_time_slot(self):
-        return [(f"{time_slot.start_time}-{time_slot.end_time} on {str(time_slot.weekday).capitalize()} at {time_slot.room.name}") for time_slot in self.time_slots.all()]
+    # @property
+    # def display_time_slot(self):
+    #     return [(f"{time_slot.start_time}-{time_slot.end_time} on {str(time_slot.weekday).capitalize()} at {time_slot.room.name}") for time_slot in self.time_slots.all()]
 
     @property
     def students_name(self):

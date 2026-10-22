@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from member.models import *
 from classroom.serializers import CourseSerializer, ScheduleSerializer
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -24,9 +24,7 @@ class TeacherSerializer(serializers.ModelSerializer):
         user_data = vaildated_data.pop("user")
 
         user_instance = User.objects.create_user(**user_data)
-        user_instance.groups.set([1])
-        print("PASSWORD")
-        print(user_instance.password)
+        user_instance.groups.set(Group.objects.filter(name="teacher"))
         teacher_instance = Teacher.objects.create(user=user_instance)
 
         return teacher_instance
@@ -68,6 +66,9 @@ class LeadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = "__all__"
+
+class PublicLeadSerializer(LeadSerializer):
+    approve = serializers.BooleanField(read_only=True)
 
 class StudentSerializer(serializers.ModelSerializer):
 

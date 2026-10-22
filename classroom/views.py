@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -25,7 +26,7 @@ class CouseViewset(viewsets.ModelViewSet):
     filterset_class = CourseFilter
 
     def get_queryset(self):
-        if self.request.user.groups.filter(name="admin"):
+        if self.request.user.groups.filter(name="admin").exists():
             return Course.objects.all()
         return Course.objects.filter(teacher__user=self.request.user)
 
@@ -137,20 +138,32 @@ class CurriculumViewset(viewsets.ModelViewSet):
 class SessionViewset(viewsets.ModelViewSet):
     queryset = Session.objects.all()
     serializer_class = SessionSerializer
-    permission_classes = [IsTeacherOrAdmin]
 
+    def get_queryset(self):
+        if self.request.user.groups.filter(name="admin").exists():
+            return Session.objects.all()
+        return Session.objects.filter(course__teacher__user=self.request.user)
+
+    def get_permissions(self):
+        if self.action in ["list"]:
+            permission_classes = [IsTeacherOrAdmin]
+        else:
+            permission_classes = [IsAdmin]
+        return [permission() for permission in permission_classes]
+
+    @transaction.atomic 
     def create(self, request, *args, **kwargs):
-        students = request.data.pop("students", [])
-        serializer = SessionSerializer(data=request.data)
+        data = request.data.copy()
+        students = data.pop("students", [])
+        serializer = SessionSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         session = serializer.save()
-        for student in students:
-            student['student'] = student['id']
-            attendance = AttendanceSerializer(data={**student, "session": session.pk})
-            attendance.is_valid(raise_exception=True)
-            attendance.save()
 
-        return Response(serializer.data)
+        attendance = AttendanceSerializer(data=[{**student,"student": student["id"], "session": session.pk} for student in students], many=True)
+        attendance.is_valid(raise_exception=True)
+        attendance.save()
+
+        return Response(serializer.data, status=201)
 
     def update(self, request, *args, **kwargs):
         students = request.data.pop("students", [])
@@ -167,7 +180,19 @@ class SessionViewset(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
+
 class AttendanceViewset(viewsets.ModelViewSet):
     queryset = Attendance.objects.all()
     serializer_class = AttendanceSerializer
-    permission_classes = [IsTeacherOrAdmin]
+
+    def get_queryset(self):
+        if self.request.user.groups.filter(name="admin").exists():
+            return Attendance.objects.all()
+        return Attendance.objects.filter(session__course__teacher__user=self.request.user)
+
+    def get_permissions(self):
+        if self.action in ["list"]:
+            permission_classes = [IsTeacherOrAdmin]
+        else:
+            permission_classes = [IsAdmin]
+        return [permission() for permission in permission_classes]

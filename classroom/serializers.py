@@ -191,7 +191,7 @@ class AttendanceSerializer(serializers.ModelSerializer):
         attendance = Attendance.objects.create(**validated_data)
         if attendance.status == "PRESENT" or attendance.status == "ABSENT":
             credit_transaction = CreditTransaction.objects.create(
-                student=attendance.student, 
+                student=attendance.student,
                 credit=-attendance.session.course.deduct_credit,
                 note=f"attendance in {attendance.session.course}"
             )
